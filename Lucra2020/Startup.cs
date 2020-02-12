@@ -40,11 +40,22 @@ namespace Lucra2020
             services.AddAuthorization(options =>
             {
 
-                options.AddPolicy("Admin",
+                options.AddPolicy("V9Admin",
                     authBuilder =>
                     {
                         authBuilder.RequireRole("Administrators");
                     });
+                options.AddPolicy("Proprietário",
+                    authBuilder =>
+                    {
+                        authBuilder.RequireRole("Proprietário");
+                    });
+                options.AddPolicy("Funcionario",
+                    authBuilder =>
+                    {
+                        authBuilder.RequireRole("Funcionário");
+                    });
+
 
             });
             // Aciona a extensão que irá configurar o uso de

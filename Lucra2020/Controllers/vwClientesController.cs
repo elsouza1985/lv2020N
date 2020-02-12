@@ -6,25 +6,31 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Lucra2020.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lucra2020.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize("Bearer")]
+    [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]
     public class vwClientesController : ControllerBase
     {
         private readonly AppDbContext _context;
+  
 
         public vwClientesController(AppDbContext context)
         {
             _context = context;
+           
         }
 
         // GET: api/vwClientes
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<vwCliente>>> GetVwCliente()
+        [HttpGet("LoadList")]
+        public async Task<ActionResult<IEnumerable<vwCliente>>> GetVwCliente(Guid _estab)
         {
-            return await _context.VwCliente.ToListAsync();
+            
+            return await _context.VwCliente.Where(a => a.UidEstabelecimento == _estab).ToListAsync();
         }
 
         // GET: api/vwClientes/5
@@ -49,8 +55,7 @@ namespace Lucra2020.Controllers
             {
                 return BadRequest();
             }
-            vwCliente.UidEstabelecimento = new Guid("0CB0E46F-6F9D-483E-8494-3DA10347D9C3");
-
+            
             _context.Entry(vwCliente).State = EntityState.Modified;
 
             try
@@ -76,7 +81,7 @@ namespace Lucra2020.Controllers
         [HttpPost]
         public async Task<ActionResult<vwCliente>> PostvwCliente(vwCliente vwCliente)
         {
-            vwCliente.UidEstabelecimento = new Guid("0CB0E46F-6F9D-483E-8494-3DA10347D9C3");
+           
             _context.VwCliente.Add(vwCliente);
             await _context.SaveChangesAsync();
 

@@ -1,6 +1,8 @@
 ﻿import React, { Component } from 'react';
 import Autosuggest from 'react-autosuggest';
 import $ from 'jquery';
+import api from '../../Services/api';
+import { getEstabelecimento } from '../../Services/auth';
 
 
 export class ListaProdutosEstab extends Component {
@@ -40,26 +42,21 @@ export class ListaProdutosEstab extends Component {
         return suggestion.value.nomeProduto + " " + suggestion.value.quantidadeProdutoEmbalagem + "-" + suggestion.value.unidadeMedida;
 
     }
-    onSuggestionsFetchRequested(value) {
+    async onSuggestionsFetchRequested(value) {
         const inputValue = value.value.trim().toLowerCase();
         const inputLength = inputValue.length;
 
         if (inputLength >= 2) {
-            fetch('api/vwProdutos/listarProd?produtoNome=' + inputValue, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    let sug = data.map(function (val, index) {
-                        return { key: index, value: val };
-                    })
-                    this.setState({
-                        suggestions: sug
-                    });
-                });
+            const response = await api.get('vwProdutos/listarProd?produtoNome=' + inputValue);
+          
+                    if (response.status === 200) {
+                        let sug = response.data.map(function (val, index) {
+                            return { key: index, value: val };
+                        })
+                        this.setState({
+                            suggestions: sug
+                        });
+                    }
         }
     }
 
@@ -76,133 +73,94 @@ export class ListaProdutosEstab extends Component {
             </div>
         )
     }
+  
     changeValue(prop, value) {
-        const { produtoData } = { ...this.state };
-        const currentState = produtoData;
-        
-        currentState[prop] = value;
 
-        this.setState({ produtoData: currentState });
-       
-        //this.loadProdutoList(1);
+        let newdata = this.state.produtoData;
+        newdata[prop] = value;
+        this.setState({ produtoData: newdata });
     }
     onChange(event, { newValue }) {
         this.setState({
             value: newValue
         });
     }
-    loadProdutoList() {
+    async loadProdutoList() {
+        const response = await api.get('vwProdutos/LoadProdList');
 
-            fetch('api/vwProdutos/LoadProdList', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    this.setState({ ListaProdutos: data, loading: false });
-                });
-       
+        if (response.status === 200) {
+            this.setState({ ListaProdutos: response.data, loading: false });
+        }
+
     }
     resetProdutoData() {
         this.setState({
             produtoData: {
-                uidProdutoEstabelecimento: undefined,
-                uidProduto: undefined,
-                uidEstabelecimento: undefined,
+                uidProdutoEstabelecimento: '00000000-0000-0000-0000-000000000000',
+                UidProduto: '',
+                uidEstabelecimento: getEstabelecimento(),
                 EANProduto: 0,
-                precoProdutoCompra: 0,
-                precoProdutoVenda: 0,
-                qtdEstoque:0
+                precoProdutoCompra: '',
+                precoProdutoVenda: '',
+                qtdEstoque:''
             }
             
         });
         $('.editinput').attr('disabled', false);
     }
-    handleSave(e) {
+   async  handleSave(e) {
         e.preventDefault();
         let uidProdutoEstabelecimento = this.state.produtoData.uidProdutoEstabelecimento;
-        const data = this.state.produtoData;//{
+       const data = JSON.stringify(this.state.produtoData);
         // PUT solicitação para editar 
-        if (uidProdutoEstabelecimento) {
-            fetch('api/vwProdutos/Prodestab/' + uidProdutoEstabelecimento, {
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                method: 'PUT',
-                body: JSON.stringify(data),
-            }).then((response) => {
-                console.log(response)
+       if (uidProdutoEstabelecimento != '00000000-0000-0000-0000-000000000000') {
+           const response = await api.put('vwProdutos/Prodestab/' + uidProdutoEstabelecimento,data);
                 if (response.status === 200 || response.status === 201) {
                     this.loadProdutoList();
                     document.getElementsByClassName('close')[0].click();
-                   // this.setState({ produtoData: undefined });
+                    this.resetProdutoData()
+                    //this.setState({ produtoData:  });
                 } else {
                     window.alert('Ocorreu um erro ao atualizar cadastro!');
                 }
-            })
+         
         }
         else // POST requisição para adicionar 
         {
-            fetch('api/vwProdutos/ProdEstab', {
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                method: 'POST',
-                body: JSON.stringify(data),
-                }).then((response) => {
-                    console.log(response)
+           
+                    const response = await api.post('vwProdutos/Prodestab/', data);
                     if (response.status == 200 || response.status == 201) {
                         this.loadProdutoList();
                         this.resetProdutoData();
                         document.getElementsByClassName('close')[0].click();
                     }
-            })
+      
         }
        
     }
 
-    handleEdit(id) {
+    async handleEdit(id) {
+        const response = await api.get('vwProdutos/GetvwProdutoEstab/' + id);
+        if (response.status === 200) {
+            this.setState({ titulo: "Editar", carregando: false, produtoData: response.data, value: response.data.nomeProduto  });
+            $('.editinput').attr('disabled', true);
+            this.loadProdutoList();
+        }
 
-        fetch('api/vwProdutos/GetvwProdutoEstab/' + id, {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                this.setState({ titulo: "Editar", carregando: false, produtoData: data });
-                this.setState({ value: this.state.produtoData.nomeProduto });
-                $('.editinput').attr('disabled', true);
-                this.loadProdutoList();
-            }).catch(error => { console.log(error) });
     }
 
-    handleDelete(id) {
+   async handleDelete(id) {
 
-        if (window.confirm('Esta ação irá apagar o registro, confirma?')) {
-            fetch('api/vwProdutos/' + id, {
-                method: "DELETE",
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-                .then((response) => {
-                    if (response.status === 200 || response.status === 201) {
-                        this.loadClientList();
-                    }
-                })
-                .catch(error => { console.log(error) })
+       if (window.confirm('Esta ação irá apagar o registro, confirma?')) {
+           const response = await api.get('vwProdutos/' + id);
+           if (response.status === 200 || response.status === 201) {
+               this.loadClientList();
+           }
+       
         }
       
     }
-    //setObjectByPath(fieldPath, value) {
-    //    this.setState({
-    //        todoList: R.set(R.lensPath(fieldPath), value, this.state.todoList)
-    //    })
-    //}
+   
     renderprodutoData(produtoData) {
         const inputProps = {
             placeholder: 'Digite o nome do produto...',
@@ -218,7 +176,7 @@ export class ListaProdutosEstab extends Component {
         return (
             <form  onSubmit={this.handleSave}  >
                 <input type="hidden" id="UidProdutoEstabelecimento" value={ produtoData.uidProdutoEstabelecimento} />
-                <input type="hidden" id="UidProduto" value={produtoData.uidProduto} />
+                <input type="hidden" id="UidProduto" value={produtoData.UidProduto} />
                 <div className="form-group">
                     <label>*Nome:</label>
                     <Autosuggest

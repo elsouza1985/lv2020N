@@ -4,7 +4,7 @@ import React, { Component } from "react";
 import { Link, withRouter } from "react-router-dom";
 import api from "../../Services/api";
 import logo from "../../Content/img/lucra-mais.png";
-import { login, SetEstabelecimento } from "../../Services/auth";
+import { login, SetEstabelecimento, SetUserName } from "../../Services/auth";
 
 
 
@@ -12,6 +12,7 @@ class SignIn extends Component {
     state = {
         UserID: "",
         password: "",
+        uidEstabelecimento:undefined,
         error: "",
         selectestabelecimento: false,
         estabelecimento: {},
@@ -21,20 +22,22 @@ class SignIn extends Component {
 
     handleSignIn = async e => {
         e.preventDefault();
-        const { UserID, password } = this.state;
+        const { UserID, password, uidEstabelecimento } = this.state;
         if (!UserID || !password) {
             this.setState({ error: "Preencha e-mail e senha para continuar!" });
         } else {
             try {
-                const response = await api.post("/login", { UserID, password });
+                const response = await api.post("/login", { UserID, password, uidEstabelecimento });
                 if (response.data.authenticated) {
-                    
-                    login(response.data.token);
-                    if (response.data.estabelecimentos.length > 1) {
+                   
+                    if (response.data.estabelecimentos!=undefined) {
                         this.setState({ selectestabelecimento: true, estabelecimentos: response.data.estabelecimentos });
                        
                         
                     } else {
+                        login(response.data.accessToken);
+                        SetEstabelecimento(response.data.estabelecimento);
+                        SetUserName(response.data.userName);
                         this.props.history.push("/home");
                     }
                 } else {
@@ -103,10 +106,10 @@ class SignIn extends Component {
         </form>);
     }
     renderEstabPane(estabelecimentos) {
-       return (<form onSubmit={this.selectEstab} className="needs-validation" >
+        return (<form onSubmit={this.handleSignIn}  className="needs-validation" >
             <div className="form-group">
                 <label >Estabelecimento</label>
-                <select className="form-control" value={this.state.selectedEstab} onChange={(e) => (this.setState({ selectedEstab: e.target.value }))}>
+               <select className="form-control" value={this.state.uidEstabelecimento} onChange={(e) => (this.setState({ uidEstabelecimento: e.target.value }))}>
                     <option value="0">Selecione...</option>
                     {estabelecimentos.map(estab =>
                         <option key={estab.uidEstabelecimento} value={estab.uidEstabelecimento}>{estab.nomeEstabelecimento}</option>

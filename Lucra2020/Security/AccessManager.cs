@@ -30,61 +30,82 @@ namespace Lucra2020.Security
             _tokenConfigurations = tokenConfigurations;
         }
 
-        public async System.Threading.Tasks.Task<bool> ValidateCredentialsAsync(User user)
+        public async System.Threading.Tasks.Task<UserModel> ValidateCredentialsAsync(User user)
         {
-            bool credenciaisValidas = false;
+            UserModel retUser = new UserModel(); 
             if (user != null && !String.IsNullOrWhiteSpace(user.UserID))
             {
                 try
                 {
 
-                StringBuilder query = new StringBuilder();
-                query.Append(@"SELECT TOP(1) *
+                    StringBuilder query = new StringBuilder();
+                    query.Append(@"SELECT TOP(1) *
                 FROM[sec].[UsuarioPerfilPapel] AS[a]
                 WHERE([a].[EmailUsuario] = '");
-                query.Append(user.UserID);
-                query.Append("') AND(PWDCOMPARE('");
-                query.Append(user.Password);
-                query.Append("', [a].[SenhaUsuario]) = 1)");
-                var usuario = await _context.VwUsuario.FromSql<vwUsuario>(query.ToString()).SingleAsync();
-               
-                if (usuario == null)
-                {
-                    return false;
-                }
-                credenciaisValidas = true;
+                    query.Append(user.UserID);
+                    query.Append("') AND(PWDCOMPARE('");
+                    query.Append(user.Password);
+                    query.Append("', [a].[SenhaUsuario]) = 1)");
+                    var credenciaisValidas = await _context.VwUsuario.FromSql<vwUsuario>(query.ToString()).SingleAsync();
 
+
+                    if (credenciaisValidas == null)
+                    {
+                        retUser.Authenticated = false;
+                        return retUser;
+                    }
+                    retUser.Authenticated = true;
+                    retUser.EmailUsuario = credenciaisValidas.EmailUsuario;
+                    retUser.Perfil = credenciaisValidas.Perfil;
+                    retUser.UidUsuario = credenciaisValidas.UidUsuario;
+                    retUser.NomeUsuario = credenciaisValidas.NomeUsuario;
+                    if (user.UidEstabelecimento != Guid.Empty)
+                    {
+                        retUser.Estabelecimentos = _context.UsuarioEstabelecimento.Where(a => a.UidEstabelecimento == user.UidEstabelecimento).ToList();
+                    }
+                    else
+                    {
+                        retUser.Estabelecimentos = _context.UsuarioEstabelecimento.Where(a => a.UidUsuario == retUser.UidUsuario).ToList();
+
+                       
+                    }
+
+                    return retUser;
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
-                    credenciaisValidas = false;
+                    return new UserModel { Authenticated = false };
                 }
-              
-            }
 
-            return credenciaisValidas;
+            }
+            else
+            {
+                return new UserModel { Authenticated = false };
+            }
+           
         }
 
-        public Token GenerateToken(User user)
+        public Token GenerateToken(UserModel user)
         {
             
 
 
 
-            vwUsuario userInfo = _context.VwUsuario.Where(a => a.EmailUsuario == user.UserID).FirstOrDefault();
-            var roles = userInfo.Papeis.Split(";");
+            //vwUsuario userInfo = _context.VwUsuario.Where(a => a.EmailUsuario == user.UserID).FirstOrDefault();
+            //var roles = userInfo.Papeis.Split(";");
 
             ClaimsIdentity identity = new ClaimsIdentity(
-                 new GenericIdentity(user.UserID, "Login"),
+                 new GenericIdentity(user.EmailUsuario, "Login"),
                  new[] {
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
-                        new Claim(JwtRegisteredClaimNames.UniqueName, user.UserID)
+                        new Claim(JwtRegisteredClaimNames.UniqueName, user.EmailUsuario)
                  }
              );
-            identity.AddClaim(new Claim(ClaimsIdentity.DefaultRoleClaimType, "Admin"));
+            vwUsuarioEstabelecimento estabInfo = _context.UsuarioEstabelecimento.Where(a => a.UidEstabelecimento == user.UidEstabelecimento && a.UidUsuario == user.UidUsuario).First();
+            identity.AddClaim(new Claim(ClaimsIdentity.DefaultRoleClaimType, estabInfo.NomeTipoRelacionamento));
 
-            userInfo.Estabelecimentos = _context.UsuarioEstabelecimento.Where(a => a.UidUsuario == userInfo.UidUsuario).ToList();
+            //userInfo.Estabelecimentos = _context.UsuarioEstabelecimento.Where(a => a.UidUsuario == userInfo.UidUsuario).ToList();
             DateTime dataCriacao = DateTime.Now;
             DateTime dataExpiracao = dataCriacao +
                 TimeSpan.FromSeconds(_tokenConfigurations.Seconds);
@@ -109,7 +130,8 @@ namespace Lucra2020.Security
                 Expiration = dataExpiracao.ToString("yyyy-MM-dd HH:mm:ss"),
                 AccessToken = token,
                 Message = "OK",
-                Estabelecimentos = userInfo.Estabelecimentos
+                UserName = user.NomeUsuario,
+                Estabelecimento = user.UidEstabelecimento
             };
         }
     }

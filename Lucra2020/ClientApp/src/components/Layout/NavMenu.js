@@ -2,17 +2,17 @@ import React, { Component } from 'react';
 import { Collapse, Container, Navbar, NavbarBrand, NavbarToggler, NavItem, NavLink } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import "reactstrap";
-import "../Content/modules/ionicons/css/ionicons.min.css";
-import "../Content/modules/fontawesome/css/all.min.css";
-import "../Content/css/style.css";
-import "../Content/css/components.css";
+import "../../Content/modules/ionicons/css/ionicons.min.css";
+import "../../Content/modules/fontawesome/css/all.min.css";
+import "../../Content/css/style.css";
+import "../../Content/css/components.css";
 import './NavMenu.css';
 
-import img1 from '../Content/img/lucra-mais.png';
-import img2 from "../Content/img/lucra-mais-small.png";
-import img3 from '../Content/img/avatar/avatar-2.png';
-import img4 from "../Content/img/avatar/avatar-1.png";
-import { logout } from '../Services/auth';
+import img1 from '../../Content/img/lucra-mais.png';
+import img2 from "../../Content/img/lucra-mais-small.png";
+import img3 from '../../Content/img/avatar/avatar-2.png';
+import img4 from "../../Content/img/avatar/avatar-1.png";
+import { logout,getUserName } from '../../Services/auth';
 
 
 export class NavMenu extends Component {
@@ -24,7 +24,7 @@ export class NavMenu extends Component {
         this.toggleNavbar = this.toggleNavbar.bind(this);
         this.state = {
             collapsed: false,
-            userName: "Erick Souza"
+            userName: getUserName()
         };
     }
 

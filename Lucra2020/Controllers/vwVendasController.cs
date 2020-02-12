@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Lucra2020.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lucra2020.Controllers
 {
@@ -23,6 +24,7 @@ namespace Lucra2020.Controllers
         }
 
         // GET: api/vwVendas
+        [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<vwVenda>>> GetVendas()
         {
@@ -30,6 +32,7 @@ namespace Lucra2020.Controllers
         }
 
         // GET: api/vwVendas/5
+        [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]
         [HttpGet("{id}")]
         public async Task<ActionResult<vwVenda>> GetvwVenda(Guid id)
         {
@@ -44,6 +47,7 @@ namespace Lucra2020.Controllers
         }
 
         // PUT: api/vwVendas/5
+        [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutvwVenda(Guid id, vwVenda vwVenda)
         {
@@ -74,6 +78,7 @@ namespace Lucra2020.Controllers
         }
 
         // POST: api/vwVendas
+        [Authorize(Roles = "V9Admin,Proprietário")]
         [HttpPost]
         public async Task<ActionResult<vwVenda>> PostvwVenda(vwVenda Venda)
         {
@@ -86,6 +91,7 @@ namespace Lucra2020.Controllers
         }
 
         // DELETE: api/vwVendas/5
+        [Authorize(Roles = "V9Admin,Proprietário")]
         [HttpDelete("{id}")]
         public async Task<ActionResult<vwVenda>> DeletevwVenda(Guid id)
         {

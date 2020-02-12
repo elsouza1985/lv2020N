@@ -10,6 +10,7 @@ namespace Lucra2020.Security
     {
         public string UserID { get; set; }
         public string Password { get; set; }
+        public Guid UidEstabelecimento { get; set; }
     }
 
     public static class Roles
@@ -32,6 +33,7 @@ namespace Lucra2020.Security
         public string Expiration { get; set; }
         public string AccessToken { get; set; }
         public string Message { get; set; }
-        public ICollection<vwUsuarioEstabelecimento> Estabelecimentos { get; set; } 
+        public string UserName { get; set; }
+        public Guid Estabelecimento { get; set; } 
     }
 }

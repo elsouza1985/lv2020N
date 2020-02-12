@@ -1,5 +1,6 @@
-﻿import React, { Component, useState } from 'react';
-
+﻿import React, { Component } from 'react';
+import api from '../../Services/api'; 
+import { getEstabelecimento } from '../../Services/auth';
 
 export class ListaClientes extends Component {
     static displayName = ListaClientes.name;
@@ -8,7 +9,8 @@ export class ListaClientes extends Component {
     constructor(props) {
        
         super(props);
-        this.state = { listaclientes: [], loading: true, loadingcliente: false, clienteData: []};
+        this.state = {
+            listaclientes: [], loading: true, loadingcliente: false, clienteData: {} };
 
        
         this.loadClientList = this.loadClientList.bind(this);
@@ -21,125 +23,82 @@ export class ListaClientes extends Component {
      
     }
  
-    loadClientList() {
-        fetch('api/vwClientes/', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
+    async loadClientList() {
+        const response = await api.get('/vwClientes/LoadList?_estab='+getEstabelecimento());
+        if (response.status === 200) {
+                this.setState({ listaclientes: response.data, loading: false });
             }
-        })
-            .then(response => response.json())
-            .then(data => {
-                this.setState({ listaclientes: data, loading: false });
-            });
     }
-    ClienteData() {
-        const clientData = {
-            uidCliente: undefined ,
-            nomeCliente: "",
-            ddd: "",
-            telefone: "",
-            email: "",
-            datadeNascimento: ""
-        }
-        return clientData;
-    }
-    handleSave(e) {
+   
+    async handleSave(e) {
         e.preventDefault();
         let clientID = this.state.clienteData.uidCliente;
         let numberPattern = /\d+/g;
-        let telefone = document.getElementsByName('telefone')[0].value.match(numberPattern);
-        telefone = telefone.length > 1 ? telefone.join('') : telefone;
-        const data = {
-            UidCliente: this.state.clienteData.uidCliente,
-            NomeCliente: document.getElementsByName('nomeCliente')[0].value,
-            Telefone: telefone,
-            Email: document.getElementsByName('email')[0].value,
-            DDD: document.getElementsByName('ddd')[0].value,
-            DataDeNascimento: document.getElementsByName('dataDeNascimento')[0].value
+        let telefone = this.state.clienteData.telefone.toString();
+        if (telefone.indexOf('-') > -1) {
+            telefone = telefone.match(numberPattern);
+            telefone = telefone.length > 1 ? telefone.join('') : telefone;
         }
+        this.changeValue('telefone', telefone);
+        
+        const data = JSON.stringify(this.state.clienteData);
         // PUT solicitação para editar contato
-        if (clientID) {
-            fetch('api/vwClientes/' + clientID, {
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                method: 'PUT',
-                body: JSON.stringify(data),
-            }).then((response) => {
-                console.log(response)
-                if (response.status == 200) {
-                    this.loadClientList();
-                    
-                    
-                    document.getElementsByClassName('close')[0].click();
-                   // this.setState({ clienteData: undefined });
-                } else {
-                    window.alert('Ocorreu um erro ao atualizar cadastro!');
-                }
-            })
-        }
-        else // POST requisição para adicionar contato
-        {
-            fetch('api/vwClientes/', {
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                method: 'POST',
-                body: JSON.stringify(data),
-            }).then((response) => {
+        if (clientID != '00000000-0000-0000-0000-000000000000') {
+            const response = await api.put('/vwClientes/' + clientID, data);
+            if (response.status == 200) {
+                this.loadClientList();
+                document.getElementsByClassName('close')[0].click();
+            } else {
+                window.alert('Ocorreu um erro ao atualizar cadastro!');
+            }
+        } else {
+              const response = await api.post('/vwClientes/', data);
                 if (response.status == 200 || response.status == 201) {
                     this.loadClientList();
-                    this.setState({ clienteData: this.ClienteData() })
+                    this.setState({ clienteData: {} })
                     document.getElementsByClassName('close')[0].click();
                 } else {
                     alert('Ocorreu um erro ao criar o registro\nErro:' + response.statusText);
                 }
-            }).catch(error => { console.log(error) });
+           
         }
        
     }
 
-    handleEdit(id) {
-
-        fetch('api/vwClientes/' + id, {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                this.setState({ titulo: "Editar", carregando: false, clienteData: data });
-                console.log(data);
-            }).catch(error => { console.log(error) });
+    async handleEdit(id) {
+        const response = await api.get('/vwClientes/' + id);
+        if (response.status === 200) {
+            this.setState({ titulo: "Editar", carregando: false, clienteData: response.data });
+        }
     }
-    changeValue(prop, value) {
-        this.setState(prevState => ({
-            clienteData: {
-                ...prevState.clienteData,
-                ...prevState.clienteData[prop] = value
-            }
-        }))
-        this.loadClientList();
-    }
-    handleDelete(id) {
+   
+    async handleDelete(id) {
 
         if (window.confirm('Esta ação irá apagar o registro, confirma?')) {
-            fetch('api/vwClientes/' + id, {
-                method: "DELETE",
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-                .then((response) => {
+                 const response = await api.delete('/vwClientes/' + id);
                     if (response.status == 200) {
                         this.loadClientList();
                     }
-                })
-                .catch(error => { console.log(error) })
         }
       
+    }
+    changeValue(prop, value) {
+   
+        let newdata = this.state.clienteData;
+        newdata[prop] = value;
+        this.setState({ clienteData: newdata });
+    }
+    ClienteData() {
+        const clientData = {
+            uidCliente: '00000000-0000-0000-0000-000000000000',
+            nomeCliente: "",
+            ddd: "",
+            telefone: "",
+            email: "",
+            dataNascimento: "",
+            uidEstabelecimento: getEstabelecimento()
+        }
+        return clientData;
     }
     renderClienteData(clienteData) {
         return (
@@ -166,7 +125,7 @@ export class ListaClientes extends Component {
                 </div>
                 <div className="form-group">
                     <label>Aniversário:</label>
-                    <input type="text" className="form-control" name="dataDeNascimento" onChange={e => this.changeValue('dataDeNascimento', e.target.value)} value={clienteData.dataDeNascimento} />
+                    <input type="text" className="form-control" name="dataDeNascimento" onChange={e => this.changeValue('dataNascimento', e.target.value)} value={clienteData.dataNascimento} />
                 </div>
                 <div className="modal-footer bg-whitesmoke br">
                     <button type="submit" className="btn btn-primary" id="swal-2">Salvar</button>
@@ -193,7 +152,7 @@ export class ListaClientes extends Component {
                             <td>{cliente.nomeCliente}</td>
                             <td>{cliente.ddd} - {cliente.telefone}</td>
                             <td>{cliente.email}</td>
-                            <td>{cliente.datadeNascimento}</td>
+                            <td>{cliente.dataNascimento}</td>
                             <td className="align-middle">
                                 <a className="btn btn-icon btn-dark" data-toggle="tooltip" title="" data-original-title="Enviar SMS" alt="Enviar SMS">
                                     <i className="fa fa-comments"></i>

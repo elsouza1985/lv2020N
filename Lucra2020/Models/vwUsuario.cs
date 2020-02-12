@@ -16,6 +16,7 @@ namespace Lucra2020.Models
         public byte[] SenhaUsuario { get; set; }
         public string Papeis { get; set; }
         public string Perfil { get; set; }
+     
         public ICollection<vwUsuarioEstabelecimento> Estabelecimentos { get; set; }
     }
 }

@@ -6,31 +6,33 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Lucra2020.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lucra2020.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize("Bearer")]
+
     public class vwProdutosController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly Guid estab = new Guid("B7882E07-56A3-478E-A4C2-51125E471CAC");
-
+       
         public vwProdutosController(AppDbContext context)
         {
             _context = context;
         }
-        //Metodos para cliente estabelecimento
+        [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]
         [HttpGet("LoadProdList")]
-        public async Task<ActionResult<IEnumerable<vwProdutoEstabelecimento>>> LoadProduto()
+        public async Task<ActionResult<IEnumerable<vwProdutoEstabelecimento>>> LoadProduto(Guid estab)
         {
             return await _context.ProdutoEstabelecimento.Where(x => x.UidEstabelecimento == estab).ToListAsync();
         }
-
+        [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]
         [HttpPost("ProdEstab")]
         public async Task<ActionResult<vwProdutoEstabelecimento>> ProdEstab(vwProdutoEstabelecimento Produto)
         {
-            Produto.UidEstabelecimento = estab;
+       
             _context.Entry(Produto).State = EntityState.Added;
             //_context.Produto.Add(Produto);
             await _context.SaveChangesAsync();
@@ -38,6 +40,7 @@ namespace Lucra2020.Controllers
             return Ok();//CreatedAtAction("GetvwProduto", new { id = Produto. }, Produto);
         }
         // GET: api/vwProdutos/5
+        [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]
         [HttpGet("GetvwProdutoEstab/{id}")]
         public async Task<ActionResult<vwProdutoEstabelecimento>> GetvwProdutoEstab(Guid id)
         {
@@ -52,26 +55,28 @@ namespace Lucra2020.Controllers
         }
 
         // GET: api/vwProdutos
+        [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<vwProduto>>> GetProduto()
         {
             return await _context.Produto.ToListAsync();
         }
         // GET: api/vwProdutos
+        [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]
         [HttpGet("listarProd")]
         public async Task<ActionResult<IEnumerable<vwProduto>>> GetProduto(string produtoNome)
         {
-            List<vwProdutoEstabelecimento> produtosEstab = await _context.ProdutoEstabelecimento.Where(a => a.UidEstabelecimento == estab).ToListAsync();
-            return await _context.Produto.Where(a => produtosEstab.Any(uidProd => uidProd.UidProduto.Equals(a.UidProduto))&& a.NomeProduto.Contains(produtoNome)).ToListAsync();// a.NomeProduto.Contains(produtoNome)).ToListAsync();
+            return await _context.Produto.Where(a=> a.NomeProduto.Contains(produtoNome)).ToListAsync();
         }
+        [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]
         [HttpGet("produtoNome")]
-        public async Task<ActionResult<IEnumerable<vwProdutoEstabelecimento>>> GetProdutoNome(string produtoNome)
+        public async Task<ActionResult<IEnumerable<vwProdutoEstabelecimento>>> GetProdutoNome(string produtoNome, Guid estab)
         {
             return await _context.ProdutoEstabelecimento
                                 .Where(a=> a.NomeProduto.Contains(produtoNome)&& a.UidEstabelecimento == estab)
                                 .ToListAsync();
         }
-
+        [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]
         // GET: api/vwProdutos/5
         [HttpGet("{id}")]
         public async Task<ActionResult<vwProduto>> GetvwProduto(Guid id)
@@ -85,7 +90,7 @@ namespace Lucra2020.Controllers
 
             return vwProduto;
         }
-
+        [Authorize(Roles = "V9Admin")]
         // PUT: api/vwProdutos/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutvwProduto(Guid id, vwProduto vwProduto)
@@ -115,6 +120,7 @@ namespace Lucra2020.Controllers
 
             return Ok();
         }
+        [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]
         // PUT: api/vwProdutos/5
         [HttpPut("Prodestab/{id}")]
         public async Task<IActionResult> Prodestab(Guid id, vwProdutoEstabelecimento Produto)
@@ -144,7 +150,7 @@ namespace Lucra2020.Controllers
 
             return Ok();
         }
-
+        [Authorize(Roles = "V9Admin")]
         // POST: api/vwProdutos
         [HttpPost]
         public async Task<ActionResult<vwProduto>> PostvwProduto(vwProduto Prod)
@@ -165,7 +171,7 @@ namespace Lucra2020.Controllers
             //Prod.UidProduto = 1;
          
         }
-
+        [Authorize(Roles = "V9Admin")]
         // DELETE: api/vwProdutos/5
         [HttpDelete("{id}")]
         public async Task<ActionResult<vwProduto>> DeletevwProduto(Guid id)
@@ -191,7 +197,7 @@ namespace Lucra2020.Controllers
 
             return Ok();
         }
-
+   
         private bool vwProdutoExists(Guid id)
         {
             return _context.Produto.Any(e => e.UidProduto == id);

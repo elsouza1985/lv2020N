@@ -6,11 +6,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Lucra2020.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lucra2020.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]
     public class vwAgendaController : ControllerBase
     {
         private readonly AppDbContext _context;

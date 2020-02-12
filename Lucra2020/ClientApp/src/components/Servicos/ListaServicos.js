@@ -1,7 +1,8 @@
 ﻿import React, { Component } from 'react';
 import Autosuggest from 'react-autosuggest';
 import $ from 'jquery';
-import Welcome from '../Vendas/Venda';
+import api from '../../Services/api';
+import { getEstabelecimento } from '../../Services/auth';
 
 export class ListaServicos extends Component {
     static displayName = ListaServicos.name;
@@ -12,7 +13,7 @@ export class ListaServicos extends Component {
             listaServicos: [],
             loading: true,
             loadingServico: false,
-            ServicoData: this.resetServicoData(),
+            ServicoData: {},
             produtoList: [],
             selectedProdutoList: [],
             value: '',
@@ -43,32 +44,28 @@ export class ListaServicos extends Component {
 
     }
 
-    loadServicoList() {
-        fetch('api/vwServicoEstabelecimento/', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                this.setState({ listaServicos: data, loading: false });
-            });
+    async loadServicoList() {
+        const response = await api.get('vwServicoEstabelecimento/LoadServices/?estab=' + getEstabelecimento());
+        if (response.status === 200) {
+            this.setState({ listaServicos: response.data, loading: false });
+        }
     }
-    changeev(e) {
-        alert(e.target.value);
-    }
+
     resetServicoData() {
         const ServicoData = {
-            uidServicoEstabelecimento: undefined,
+            uidServicoEstabelecimento: '00000000-0000-0000-0000-000000000000',
+            uidEstabelecimento: getEstabelecimento(),
             nomeServico: "",
             qtdTempo: "",
-            unidadeMedida: "",
+            UnidadeMedida: "",
             produtos: [],
-            valorServico: ""
+            valorServico: "",
+            TipoUnidadeMedida: "Tempo"
 
         }
-        return ServicoData;
+        this.setState({
+            ServicoData: ServicoData
+        });
     }
     addtableProduct(produto, type) {
 
@@ -95,7 +92,13 @@ export class ListaServicos extends Component {
 
 
     }
-    handleSave(e) {
+    changeValue(prop, value) {
+
+        let newdata = this.state.ServicoData;
+        newdata[prop] = value;
+        this.setState({ produtoData: newdata });
+    }
+   async handleSave(e) {
         e.preventDefault();
         let ServicoID = this.state.ServicoData.uidServicoEstabelecimento;
         let produto = {
@@ -115,97 +118,48 @@ export class ListaServicos extends Component {
                 , ValorProdutoServico: $(this).find('input[name="ValorProdutoServico"]').val()
             });
         })
+       this.changeValue('produtos', produtoList);
+        
 
-
-        const data = {
-            UidServicoEstabelecimento: this.state.ServicoData.uidServicoEstabelecimento,
-            NomeServico: document.getElementsByName('nomeServico')[0].value,
-            QtdTempo: document.getElementsByName('qtdTempo')[0].value,
-            UnidadeMedida: document.getElementsByName('UnidadeMedida')[0].options[document.getElementsByName('UnidadeMedida')[0].selectedIndex].value,
-            TipoUnidadeMedida: 'Tempo',
-            ValorServico: document.getElementsByName('valorServico')[0].value,
-            Produtos: produtoList
-        }
+       const data = JSON.stringify(this.state.ServicoData);
         // PUT solicitação para editar contato
-        if (ServicoID) {
-            fetch('api/vwServicoEstabelecimento' + ServicoID, {
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                method: 'PUT',
-                body: JSON.stringify(data),
-            }).then((response) => {
-                console.log(response)
-                if (response.status === 200 || response.status === 201) {
-                    this.loadServicoList();
-                    document.getElementsByClassName('close')[0].click();
-                    // this.setState({ ServicoData: undefined });
-                } else {
-                    window.alert('Ocorreu um erro ao atualizar cadastro!');
-                }
-            })
+       if (ServicoID != '00000000-0000-0000-0000-000000000000' ) {
+           const response = await api.put('vwServicoEstabelecimento/' + ServicoID, data);
+           if (response.status === 200 || response.status === 201) {
+               this.loadServicoList();
+               document.getElementsByClassName('close')[0].click();
+               this.resetServicoData();
+           } else {
+               window.alert('Ocorreu um erro ao atualizar cadastro!');
+           }
         }
-        else // POST requisição para adicionar contato
+        else 
         {
-            fetch('api/vwServicoEstabelecimento', {
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                method: 'POST',
-                body: JSON.stringify(data),
-            }).then((response) => {
-                console.log(response)
+            const response = await api.post('vwServicoEstabelecimento/',data);
                 if (response.status == 200 || response.status == 201) {
                     this.loadServicoList();
                     document.getElementsByClassName('close')[0].click();
-                    // this.setState({ ServicoData: undefined });
+              
                 } else {
                     window.alert('Ocorreu um erro ao criar o cadastro\nErro:' + response.statusText);
                 }
-            });
         }
-
     }
 
-    handleEdit(id) {
-
-        fetch('api/vwServicoEstabelecimento/' + id, {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                this.setState({ titulo: "Editar", carregando: false, ServicoData: data });
-                console.log(data);
-            }).catch(error => { console.log(error) });
-
+    async handleEdit(id) {
+        const response = await api.get('vwServicoEstabelecimento/' + id);
+        if (response.status === 200) {
+            this.setState({ titulo: "Editar", carregando: false, ServicoData: response.data });
+        }
     }
-    changeValue(prop, value) {
-        this.setState(prevState => ({
-            ServicoData: {
-                ...prevState.ServicoData,
-                ...prevState.ServicoData[prop] = value
-            }
-        }))
-        this.loadServicoList();
-    }
-    handleDelete(id) {
+
+    async handleDelete(id) {
 
         if (window.confirm('Esta ação irá apagar o registro, confirma?')) {
-            fetch('api/vwServicoEstabelecimento/' + id, {
-                method: "DELETE",
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-                .then((response) => {
-                    if (response.status == 200) {
-                        this.loadServicoList();
-                    }
-                })
-                .catch(error => { console.log(error) })
+            const response = await api.delete('vwServicoEstabelecimento/' + id);
+            if (response.status == 200) {
+                this.loadServicoList();
+            }
         }
 
     }
@@ -216,33 +170,22 @@ export class ListaServicos extends Component {
             value: newValue
         });
     }
-
-    // Autosuggest will call this function every time you need to update suggestions.
-    // You already implemented this logic above, so just use it.
-    onSuggestionsFetchRequested(value) {
+   async onSuggestionsFetchRequested(value) {
         const inputValue = value.value.trim().toLowerCase();
         const inputLength = inputValue.length;
 
         if (inputLength >= 2) {
-            fetch('api/vwProdutos/produtoNome?produtoNome=' + inputValue, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    let sug = data.map(function (val, index) {
-                        return { key: index, value: val };
-                    })
-                    this.setState({
-                        suggestions: sug
-                    });
+            const response = await api.get('vwProdutos/produtoNome?produtoNome=' + inputValue+'&estab='+getEstabelecimento());
+            if (response.status === 200) {
+                let sug = response.data.map(function (val, index) {
+                    return { key: index, value: val };
+                })
+                this.setState({
+                    suggestions: sug
                 });
+            }
         }
     }
-
-    // Autosuggest will call this function every time you need to clear suggestions.
     onSuggestionsClearRequested() {
         this.setState({
             suggestions: []
@@ -269,8 +212,10 @@ export class ListaServicos extends Component {
         const theme = {
             input: 'form-control'
         }
-        for (var i = 0; i < ServicoData.produtos.length; i++) {
-            this.addtableProduct(ServicoData.produtos[i]);
+        if (ServicoData.produtos) {
+            for (var i = 0; i < ServicoData.produtos.length; i++) {
+                this.addtableProduct(ServicoData.produtos[i]);
+            }
         }
 
         return (
@@ -292,7 +237,8 @@ export class ListaServicos extends Component {
                             <input type="number" className="form-control" name="qtdTempo" onChange={e => this.changeValue('qtdTempo', e.target.value)} value={ServicoData.qtdTempo} required />
                         </div>
                         <div className="col-sm-9">
-                            <select className="form-control" name="UnidadeMedida" onChange={e => this.changeValue('UnidadeMedida', e.target.value)} value={ServicoData.unidadeMedida} required>
+                            <select className="form-control" id="UnidadeMedida" onChange={e => this.changeValue('UnidadeMedida', $('#UnidadeMedida option:selected').val())} value={ServicoData.UnidadeMedida} required>
+                                <option value="0">Selecione</option>
                                 <option value="Minuto">Minuto</option>
                                 <option value="Hora">Hora</option>
                             </select>
@@ -304,8 +250,7 @@ export class ListaServicos extends Component {
                         <label>Produtos:</label>
                     </div>
                     <div className="row">
-                        <div className="col-sm-11">
-                            <div className="row">
+                        <div className="col-sm-10">
                                 <Autosuggest
                                     suggestions={suggestions}
                                     onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
@@ -316,7 +261,6 @@ export class ListaServicos extends Component {
                                     theme={theme}
 
                                 />
-                            </div>
                         </div>
                         <div className="col-sm-1 mr-3">
                             <button className="btn btn-success" ><i class="fas fa-plus-circle"></i></button>
@@ -379,8 +323,6 @@ export class ListaServicos extends Component {
             </table>
         );
     }
-
-
     render() {
         let contents = this.state.loading
             ? <p><em>Loading...</em></p>
@@ -389,8 +331,7 @@ export class ListaServicos extends Component {
             : this.renderServicoData(this.state.ServicoData, this.state.produtoList);
         return (
             <div >
-                <Welcome name="pessoal" val1={this.state.listaServicos.length} val2="5"/>
-                <section className="section">
+                 <section className="section">
                     <div className="section-header">
                         <h1><i className="fa fa-user-friends"></i> Servicos</h1>
                         <div className="section-header-breadcrumb">

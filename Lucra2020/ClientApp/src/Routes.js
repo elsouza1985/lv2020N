@@ -1,6 +1,6 @@
 ﻿import React from "react";
 import { BrowserRouter, Route, Switch, Redirect } from "react-router-dom";
-import { Layout } from './components/Layout';
+import { Layout } from './components/Layout/Layout';
 import { Home } from './components/Home';
 import { ListaClientes } from './components/Clientes/ListaClientes';
 import { ExibeCliente } from './components/Clientes/ExibirCliente';

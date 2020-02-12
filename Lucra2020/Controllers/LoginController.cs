@@ -34,9 +34,18 @@ namespace Lucra2020.Controllers
               [FromBody]User usuario,
               [FromServices]AccessManager accessManager)
         {
-            if (await accessManager.ValidateCredentialsAsync(usuario))
+            UserModel user = await accessManager.ValidateCredentialsAsync(usuario);
+            if (user.Authenticated)
             {
-                return accessManager.GenerateToken(usuario);
+                if (user.Estabelecimentos.Count > 1)
+                {
+                    return user;
+                }
+                else
+                {
+                    user.UidEstabelecimento = user.Estabelecimentos.First().UidEstabelecimento;
+                    return accessManager.GenerateToken(user);
+                }
             }
             else
             {
@@ -47,7 +56,7 @@ namespace Lucra2020.Controllers
                 };
             }
         }
-        [Authorize(Roles ="Admin")]
+        [Authorize(Roles ="V9Admin,Proprietário,Funcionário")]
         [HttpGet]
         public async Task<ActionResult<vwEstabelecimento>> getEstabelecimento(Guid id)
         {
