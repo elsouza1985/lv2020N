@@ -56,6 +56,14 @@ namespace Lucra2020.Controllers
                 };
             }
         }
+        [HttpGet]
+        public async Task<object>LostPass(Guid UidCode)
+        {
+            
+            return Ok();
+        }
+
+
         [Authorize(Roles ="V9Admin,Proprietário,Funcionário")]
         [HttpGet]
         public async Task<ActionResult<vwEstabelecimento>> getEstabelecimento(Guid id)

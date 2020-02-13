@@ -34,10 +34,10 @@ namespace Lucra2020.Controllers
         {
        
             _context.Entry(Produto).State = EntityState.Added;
-            //_context.Produto.Add(Produto);
+           
             await _context.SaveChangesAsync();
 
-            return Ok();//CreatedAtAction("GetvwProduto", new { id = Produto. }, Produto);
+            return Ok();
         }
         // GET: api/vwProdutos/5
         [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]

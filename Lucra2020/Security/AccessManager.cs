@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
+using System.Threading.Tasks;
 using Lucra2020.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +31,7 @@ namespace Lucra2020.Security
             _tokenConfigurations = tokenConfigurations;
         }
 
-        public async System.Threading.Tasks.Task<UserModel> ValidateCredentialsAsync(User user)
+        public async Task<UserModel> ValidateCredentialsAsync(User user)
         {
             UserModel retUser = new UserModel(); 
             if (user != null && !String.IsNullOrWhiteSpace(user.UserID))
@@ -85,7 +86,28 @@ namespace Lucra2020.Security
             }
            
         }
+        public bool ValidateGuid(Guid UidFind)
+        {
+            return false;
+        }
+        public async Task<bool> UpdatePass(Guid UserId, string NewPass)
+        {
+            vwUsuario user = await _context.VwUsuario.FindAsync(UserId);
+            byte[] bytePass = UTF8Encoding.UTF8.GetBytes(NewPass);
+            user.SenhaUsuario = bytePass;
+            try
+            {
+                _context.Entry(user).State = EntityState.Modified;
+                _context.SaveChanges();
 
+            }
+            catch (Exception ex)
+            {
+
+                return false;
+            }
+            return true;
+        }
         public Token GenerateToken(UserModel user)
         {
             
