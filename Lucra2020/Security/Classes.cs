@@ -34,6 +34,7 @@ namespace Lucra2020.Security
         public string AccessToken { get; set; }
         public string Message { get; set; }
         public string UserName { get; set; }
-        public Guid Estabelecimento { get; set; } 
+        public Guid Estabelecimento { get; set; }
+        public Guid UidUsuario { get; internal set; }
     }
 }

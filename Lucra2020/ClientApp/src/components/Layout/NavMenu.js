@@ -24,7 +24,7 @@ export class NavMenu extends Component {
         this.toggleNavbar = this.toggleNavbar.bind(this);
         this.state = {
             collapsed: false,
-            userName: getUserName()
+            userName: getUserName().Name
         };
     }
 

@@ -62,11 +62,11 @@ namespace Lucra2020.Security
                     retUser.NomeUsuario = credenciaisValidas.NomeUsuario;
                     if (user.UidEstabelecimento != Guid.Empty)
                     {
-                        retUser.Estabelecimentos = _context.UsuarioEstabelecimento.Where(a => a.UidEstabelecimento == user.UidEstabelecimento).ToList();
+                        retUser.Estabelecimentos = _context.UsuarioEstabelecimento.Where(a => a.UidEstabelecimento == user.UidEstabelecimento && a.UidUsuario == credenciaisValidas.UidUsuario && a.NomeUsuario == credenciaisValidas.NomeUsuario).ToList();
                     }
                     else
                     {
-                        retUser.Estabelecimentos = _context.UsuarioEstabelecimento.Where(a => a.UidUsuario == retUser.UidUsuario).ToList();
+                        retUser.Estabelecimentos = _context.UsuarioEstabelecimento.Where(a => a.UidUsuario == retUser.UidUsuario && a.NomeUsuario == retUser.NomeUsuario).ToList();
 
                        
                     }
@@ -153,7 +153,8 @@ namespace Lucra2020.Security
                 AccessToken = token,
                 Message = "OK",
                 UserName = user.NomeUsuario,
-                Estabelecimento = user.UidEstabelecimento
+                Estabelecimento = user.UidEstabelecimento,
+                UidUsuario = user.UidUsuario
             };
         }
     }

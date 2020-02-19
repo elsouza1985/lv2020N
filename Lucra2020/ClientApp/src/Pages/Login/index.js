@@ -4,7 +4,7 @@ import React, { Component } from "react";
 import { Link, withRouter } from "react-router-dom";
 import api from "../../Services/api";
 import logo from "../../Content/img/lucra-mais.png";
-import { login, SetEstabelecimento, SetUserName } from "../../Services/auth";
+import { login, SetEstabelecimento, SetUser } from "../../Services/auth";
 
 
 
@@ -37,7 +37,7 @@ class SignIn extends Component {
                     } else {
                         login(response.data.accessToken);
                         SetEstabelecimento(response.data.estabelecimento);
-                        SetUserName(response.data.userName);
+                        SetUser(response.data.userName, response.data.uidUsuario);
                         this.props.history.push("/home");
                     }
                 } else {
