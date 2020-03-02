@@ -1,5 +1,7 @@
 ﻿import React, { Component } from 'react';
 import Autosuggest from 'react-autosuggest';
+import api from '../../Services/api';
+import { getEstabelecimento } from '../../Services/auth';
 
 
 export class Cupom extends Component {
@@ -7,51 +9,27 @@ export class Cupom extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            loading: true,
             clienteData: {},
             valorItens: '50.00',
             itens: [],
-            produtos: [],
-            servicos:[],
+            produtos: this.props.produtoList,
+            servicos:this.props.servicoList,
             formaPagamento: 'Dinheiro',
             valorCompra: '50.00'
         };
-        this.loadCupomData = this.loadCupomData.bind(this);
+      
         this.handleSave = this.handleSave.bind(this);
-        this.loadCupomData();
+       
+       
     }
-    
-    loadCupomData() {
-        const cliente = {
-            nomeCliente: 'Ricardo Silva',
-            contatoCliente: '11 98585-4564'
-        }
-        const produtos = [
-            { nomeItem: 'Corte Masc.', valorItem: 45 },
-            { nomeItem: 'Cerv. Budw.', valorItem: 5 }
-        ]
-        fetch('api/vwClientes/1863D5CA-3915-4207-B1D6-4DB99208BC6D' , {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                cliente.nomeCliente = data.nomeCliente;
-                cliente.contatoCliente = String(data.ddd) +' '+ String(data.telefone);
-                this.setState({
-                    clienteData: cliente,
-                    itens: produtos
-                });
-            }).catch(error => { console.log(error) });
-        
-    }
+     
     handleSave() {
         const servicosData = [{
             UidVendaServicoItem:undefined,
             UidVenda: undefined,
             UidUsuario:'AED7A9B9-D373-45F0-8104-95C9F5637501',
-            UidServicoEstabelecimento:'342A2C1B-CA36-4EE5-25FA-08D7A68DAAD4', 
+            UidServicoEstabelecimento: getEstabelecimento(), 
             NomeServico:'Corte',
             ValorServico:30,
             ValorDesconto:0,
@@ -101,153 +79,16 @@ export class Cupom extends Component {
             }
         }).catch(error => { console.log(error) });
     }
+   
     render() {
         const inputProps = {
 
             class: 'form-control'
         }
-        
+        let ServProd = this.state.loading ? <p><em>Loading...</em></p>:  this.renderProdutosServicos();
+       
         return (
-            <div className="row">
-            <div className="col-xs-12 col-md-9">
-            
-              <div className="row">
-                    <div className="col-12">
-                        <div className="card">
-                            <div className="card-header">
-                                <h4>Principais Produtos e Serviços</h4>
-                            </div>
-                            <div className="card-body">
-                                <div className="owl-carousel owl-theme slider owl-loaded owl-drag" id="slider1">
-
-                                    <div className="owl-stage-outer"><div className="owl-stage" ><div className="owl-item" ><div>
-                                        <div className="card card-dark">
-                                            <div className="card-header">
-                                                <i className="fas fa-cut"></i>
-                                            </div>
-                                            <div className="card-body">
-                                                <h5>Corte de Cabelo Masculino</h5>
-                                                <h6 className="text-primary">R$40,00</h6>
-                                                <br />
-                                                <button className="btn btn-icon icon-left btn-primary text-center">
-                                                    <i className="ion-plus-round"></i>
-                                                    Adicionar
-                                </button>
-                                            </div>
-                                        </div>
-                                    </div></div><div className="owl-item" ><div>
-                                        <div className="card card-dark">
-                                            <div className="card-header">
-                                                <i className="fas fa-cut"></i>
-                                            </div>
-                                            <div className="card-body">
-                                                <h5>Corte de Cabelo Masculino</h5>
-                                                <h6 className="text-primary">R$40,00</h6>
-                                                <br />
-                                                <button className="btn btn-icon icon-left btn-primary text-center">
-                                                    <i className="ion-plus-round"></i>
-                                                    Adicionar
-                                </button>
-                                            </div>
-                                        </div>
-                                    </div></div><div className="owl-item"><div>
-                                        <div className="card card-dark">
-                                            <div className="card-header">
-                                                <i className="fas fa-cut"></i>
-                                            </div>
-                                            <div className="card-body">
-                                                <h5>Corte de Cabelo Masculino</h5>
-                                                <h6 className="text-primary">R$40,00</h6>
-                                                <br />
-                                                <button className="btn btn-icon icon-left btn-primary text-center">
-                                                    <i className="ion-plus-round"></i>
-                                                    Adicionar
-                                </button>
-                                            </div>
-                                        </div>
-                                    </div></div><div className="owl-item" ><div>
-                                        <div className="card card-dark">
-                                            <div className="card-header">
-                                                <i className="fas fa-cut"></i>
-                                            </div>
-                                            <div className="card-body">
-                                                <h5>Corte de Cabelo Masculino</h5>
-                                                <h6 className="text-primary">R$40,00</h6>
-                                                <br />
-                                                <button className="btn btn-icon icon-left btn-primary text-center">
-                                                    <i className="ion-plus-round"></i>
-                                                    Adicionar
-                                </button>
-                                            </div>
-                                        </div>
-                                    </div></div><div className="owl-item active" ><div>
-                                        <div className="card card-dark">
-                                            <div className="card-header">
-                                                <i className="fas fa-cut"></i>
-                                            </div>
-                                            <div className="card-body">
-                                                <h5>Corte de Cabelo Masculino</h5>
-                                                <h6 className="text-primary">R$40,00</h6>
-                                                <br />
-                                                <button className="btn btn-icon icon-left btn-primary text-center">
-                                                    <i className="ion-plus-round"></i>
-                                                    Adicionar
-                                </button>
-                                            </div>
-                                        </div>
-                                    </div></div><div className="owl-item active" ><div>
-                                        <div className="card card-dark">
-                                            <div className="card-header">
-                                                <i className="fas fa-cut"></i>
-                                            </div>
-                                            <div className="card-body">
-                                                <h5>Corte de Cabelo Masculino</h5>
-                                                <h6 className="text-primary">R$40,00</h6>
-                                                <br />
-                                                <button className="btn btn-icon icon-left btn-primary text-center">
-                                                    <i className="ion-plus-round"></i>
-                                                    Adicionar
-                                </button>
-                                            </div>
-                                        </div>
-                                    </div></div><div className="owl-item active" ><div>
-                                        <div className="card card-dark">
-                                            <div className="card-header">
-                                                <i className="fas fa-cut"></i>
-                                            </div>
-                                            <div className="card-body">
-                                                <h5>Corte de Cabelo Masculino</h5>
-                                                <h6 className="text-primary">R$40,00</h6>
-                                                <br />
-                                                <button className="btn btn-icon icon-left btn-primary text-center">
-                                                    <i className="ion-plus-round"></i>
-                                                    Adicionar
-                                </button>
-                                            </div>
-                                        </div>
-                                    </div></div><div className="owl-item active" ><div>
-                                        <div className="card card-dark">
-                                            <div className="card-header">
-                                                <i className="fas fa-cut"></i>
-                                            </div>
-                                            <div className="card-body">
-                                                <h5>Corte de Cabelo Masculino</h5>
-                                                <h6 className="text-primary">R$40,00</h6>
-                                                <br />
-                                                <button className="btn btn-icon icon-left btn-primary text-center">
-                                                    <i className="ion-plus-round"></i>
-                                                    Adicionar
-                                </button>
-                                            </div>
-                                        </div>
-                                    </div></div></div></div><div className="owl-nav"><div className="owl-prev"><i className="fas fa-chevron-left"></i></div><div className="owl-next disabled"><i className="fas fa-chevron-right"></i></div></div><div className="owl-dots"><div className="owl-dot"><span></span></div><div className="owl-dot active"><span></span></div></div></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-            <div className="col-md-3 col-xs-12">
+          
                 <div className="card card-hero">
                     <div className="card-header">
 
@@ -293,8 +134,7 @@ export class Cupom extends Component {
                         </div>
                     </div>
                 </div>
-            </div>
-                </div>
+          
         );
     }
 }

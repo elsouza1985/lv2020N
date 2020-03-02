@@ -86,7 +86,8 @@ export class ListaProdutosEstab extends Component {
         });
     }
     async loadProdutoList() {
-        const response = await api.get('vwProdutos/LoadProdList');
+
+        const response = await api.get('vwProdutos/LoadProdList?estab='+getEstabelecimento());
 
         if (response.status === 200) {
             this.setState({ ListaProdutos: response.data, loading: false });

@@ -2,7 +2,7 @@
 import { getToken, getEstabelecimento } from "./auth";
 
 const api = axios.create({
-    baseURL: "http://localhost:49929/api/",
+    baseURL: "https://localhost:44323/api/",
     headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
