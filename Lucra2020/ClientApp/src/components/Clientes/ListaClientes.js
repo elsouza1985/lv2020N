@@ -182,9 +182,9 @@ export class ListaClientes extends Component {
             <div>
                 <section className="section">
                     <div className="section-header">
-                        <h1><i className="fa fa-user-friends"></i> Clientes</h1>
+                        <h2><i className="fa fa-user-friends"></i> Clientes</h2>
                         <div className="section-header-breadcrumb">
-                            <div className="breadcrumb-item active"><a href="/dashboard">Dashboard</a></div>
+                            <div className="breadcrumb-item active"><a href="/home">Dashboard</a></div>
                             <div className="breadcrumb-item"><a href="/clientes">Clientes</a></div>
                         </div>
                     </div>

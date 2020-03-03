@@ -12,11 +12,11 @@ namespace Lucra2020.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize("Bearer")]
     public class vwVendasController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly Guid estab = new Guid("B7882E07-56A3-478E-A4C2-51125E471CAC");
-        private readonly Guid user = new Guid("82FDA5CE-DF83-41F7-AE29-2158CBBA2DB4");
+ 
 
         public vwVendasController(AppDbContext context)
         {
@@ -78,13 +78,13 @@ namespace Lucra2020.Controllers
         }
 
         // POST: api/vwVendas
-        [Authorize(Roles = "V9Admin,Proprietário")]
+        [Authorize(Roles = "V9Admin,Proprietário,Funcionário")]
         [HttpPost]
         public async Task<ActionResult<vwVenda>> PostvwVenda(vwVenda Venda)
         {
-            Venda.UidEstabelecimento = estab;
-            Venda.UidUsuario = user;
+       
             _context.Vendas.Add(Venda);
+        
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetvwVenda", new { id = Venda.UidVenda }, Venda);
